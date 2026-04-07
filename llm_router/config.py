@@ -8,12 +8,17 @@ from pathlib import Path
 import yaml
 
 
+# Search order: NAS (shared, single source of truth) → home dir → CWD.
+# NAS path works for any cluster machine with /mnt/public mounted.
+# Home dir fallback for machines without NAS (e.g. Tokyo VPS).
 _DEFAULT_CONFIG_PATHS = [
+    Path("/mnt/public/Vault/Projects/llm-router/config.yaml"),
     Path("~/.config/llm-router/config.yaml").expanduser(),
     Path("llm-router.yaml"),  # CWD fallback
 ]
 
 _DEFAULT_DOTENV_PATHS = [
+    Path("/mnt/public/Vault/Projects/llm-router/.env"),
     Path(".env"),  # CWD
     Path("~/.config/llm-router/.env").expanduser(),
 ]
@@ -54,8 +59,9 @@ def load_config(path: str | Path | None = None) -> dict:
     Search order:
       1. Explicit path argument
       2. LLM_ROUTER_CONFIG env var
-      3. ~/.config/llm-router/config.yaml
-      4. ./llm-router.yaml
+      3. /mnt/public/Vault/Projects/llm-router/config.yaml (NAS — shared)
+      4. ~/.config/llm-router/config.yaml (per-machine fallback)
+      5. ./llm-router.yaml (CWD)
 
     Returns empty dict if no config found (backends can still be
     added programmatically).
