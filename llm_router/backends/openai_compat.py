@@ -19,7 +19,7 @@ class OpenAIBackend(Backend):
         base_url: str,
         api_key: str,
         label: str | None = None,
-        timeout: int = 300,
+        timeout: int = 600,
         models: list[str] | None = None,
     ):
         self.base_url = base_url.rstrip("/")
