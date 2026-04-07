@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Config with real API keys — never commit
+config.yaml
+llm-router.yaml

@@ -1,0 +1,30 @@
+# LLM Router configuration
+#
+# Copy to ~/.config/llm-router/config.yaml and fill in your values.
+# API keys can be:
+#   - Direct: "sk-abc123..."
+#   - Env var: "env:OPENROUTER_API_KEY"
+#   - File: "file:~/.secrets/openrouter.key"
+
+backends:
+  - label: local-ollama
+    type: ollama
+    url: http://localhost:11434
+    enabled: true
+
+  - label: runpod
+    type: ollama
+    url: https://YOUR-POD-ID-11434.proxy.runpod.net
+    enabled: false
+    timeout: 300
+
+  - label: openrouter
+    type: openai
+    url: https://openrouter.ai/api/v1
+    api_key: env:OPENROUTER_API_KEY
+    enabled: false
+    # Optional: explicit model list (skips /models query)
+    # models:
+    #   - google/gemma-3-27b-it
+    #   - qwen/qwen-2.5-72b-instruct
+    #   - meta-llama/llama-3.1-70b-instruct
