@@ -1,4 +1,4 @@
-"""Configuration loading — YAML file + environment variables."""
+"""Configuration loading — YAML file + environment variables + .env."""
 
 from __future__ import annotations
 
@@ -13,9 +13,43 @@ _DEFAULT_CONFIG_PATHS = [
     Path("llm-router.yaml"),  # CWD fallback
 ]
 
+_DEFAULT_DOTENV_PATHS = [
+    Path(".env"),  # CWD
+    Path("~/.config/llm-router/.env").expanduser(),
+]
+
+
+def _load_dotenv():
+    """Load .env file into os.environ. Uses python-dotenv if available,
+    falls back to a simple key=value parser."""
+    for p in _DEFAULT_DOTENV_PATHS:
+        if not p.exists():
+            continue
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(p, override=False)
+            return
+        except ImportError:
+            pass
+        # Simple fallback: parse KEY=VALUE lines
+        with open(p) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip("'\"")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+        return
+
 
 def load_config(path: str | Path | None = None) -> dict:
     """Load router config from YAML file.
+
+    Loads .env first (if found) so environment variable references
+    in the config can resolve.
 
     Search order:
       1. Explicit path argument
@@ -26,6 +60,8 @@ def load_config(path: str | Path | None = None) -> dict:
     Returns empty dict if no config found (backends can still be
     added programmatically).
     """
+    _load_dotenv()
+
     candidates = []
 
     if path:

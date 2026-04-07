@@ -4,6 +4,7 @@ __pycache__/
 dist/
 build/
 .eggs/
+.env
 
 # Config with real API keys — never commit
 config.yaml
