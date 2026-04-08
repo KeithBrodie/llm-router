@@ -77,7 +77,6 @@ class OpenAIBackend(Backend):
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "stream": True,
         }
         data = json.dumps(payload).encode()
         req = urllib.request.Request(
@@ -87,36 +86,16 @@ class OpenAIBackend(Backend):
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                text, usage = self._read_stream(resp)
+                result = json.loads(resp.read().decode())
         except urllib.error.URLError as e:
             raise ConnectionError(
                 f"OpenAI-compatible ({self.label}) unreachable: {e}"
             ) from e
 
-        return ChatResponse(text=text, model=model, usage=usage)
+        choices = result.get("choices", [])
+        if not choices:
+            raise ValueError(f"Empty response from {self.label} for model {model}")
 
-    @staticmethod
-    def _read_stream(resp) -> tuple[str, dict | None]:
-        """Read an SSE stream, accumulate content deltas."""
-        chunks = []
-        usage = None
-        for raw_line in resp:
-            line = raw_line.decode("utf-8", errors="replace").strip()
-            if not line or line.startswith(":"):
-                continue  # empty line or SSE comment (keep-alive)
-            if not line.startswith("data: "):
-                continue
-            payload = line[6:]
-            if payload == "[DONE]":
-                break
-            try:
-                obj = json.loads(payload)
-            except json.JSONDecodeError:
-                continue
-            delta = (obj.get("choices") or [{}])[0].get("delta", {})
-            content = delta.get("content")
-            if content:
-                chunks.append(content)
-            if obj.get("usage"):
-                usage = obj["usage"]
-        return "".join(chunks), usage
+        text = choices[0].get("message", {}).get("content", "")
+        usage = result.get("usage")
+        return ChatResponse(text=text, model=model, usage=usage)
