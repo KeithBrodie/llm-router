@@ -9,3 +9,4 @@ build/
 # Config with real API keys — never commit
 config.yaml
 llm-router.yaml
+models.csv
